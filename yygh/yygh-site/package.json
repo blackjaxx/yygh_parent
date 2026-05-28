@@ -1,0 +1,37 @@
+{
+  "name": "yygh-site",
+  "version": "1.0.0",
+  "description": "尚医通前端平台",
+  "author": "XSH",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "echarts": "^5.5.1",
+    "element-ui": "^2.15.14",
+    "js-cookie": "^3.0.5",
+    "nuxt": "^2.17.3",
+    "vue": "^2.7.16",
+    "vue-qriously": "^1.1.1"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.25.1",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.57.0",
+    "eslint-friendly-formatter": "^4.0.1",
+    "eslint-loader": "^4.0.2",
+    "eslint-plugin-vue": "^9.28.0",
+    "sass": "^1.77.8",
+    "sass-loader": "^10.5.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

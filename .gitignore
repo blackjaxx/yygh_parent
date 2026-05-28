@@ -1,0 +1,27 @@
+# 环境变量（含密钥）
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Java
+**/target/
+*.class
+*.log
+
+# Node
+**/node_modules/
+**/dist/
+npm-debug.log*
+
+# 证书与本地密钥文件
+**/*.p12
+**/*.pem
+**/cert/
