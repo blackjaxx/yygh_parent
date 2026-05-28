@@ -2,6 +2,8 @@
 
 尚医通是一个完整的网上预约挂号平台，旨在缓解"看病难、挂号难"的就医难题。患者可以通过线上平台随时随地搜索医院、选择科室和排班、完成预约挂号，无需到医院排长队。系统支持微信扫码登录、微信支付，涵盖医院数据管理、排班管理、订单管理和数据统计等完整业务闭环。
 
+**🆕 近期新增功能：** 医院收藏、就诊评价/评分、智能科室推荐（导诊）、医院对比、体检套餐、医生团队展示、预约记录导出 Excel。
+
 ---
 
 ## 目录
@@ -94,8 +96,8 @@ cupr/
     ├── service_gateway/      # API 网关（Spring Cloud Gateway）
     ├── hospital-manage/      # 医院对接模拟端（Spring Boot + Thymeleaf）
     ├── hospital_admin/       # 管理后台前端（Vue 2 + Element UI）
-    ├── yygh-site/            # 用户预约端前端（Nuxt 2 + Element UI）
-    └── sql/                  # SQL 数据库初始化脚本 + MongoDB 初始化数据
+│   ├── yygh-site/            # 用户预约端前端（Nuxt 2 + Element UI）
+    │   └── sql/                  # SQL 脚本（表结构 + 初始化数据 + 测试数据 + 新功能表）
 ```
 
 ---
@@ -146,7 +148,7 @@ cupr/
 | `service_oss` | 8205 | 阿里云 OSS 文件上传 | — |
 | `service_statistics` | 8208 | 订单统计、数据报表 | MySQL |
 | `service_task` | 8207 | 定时任务（就诊提醒等） | MySQL |
-| `service_user` | 8203 | 微信登录、就诊人管理 | MySQL |
+| `service_user` | 8203 | 微信登录、就诊人管理、医院收藏、就诊评价 | MySQL |
 
 ### 公共服务
 
@@ -182,7 +184,7 @@ cupr/
 | `yygh_cmn` | 数据字典 | `dict`（省市、医院类型、证件类型等基础编码） |
 | `yygh_hosp` | 医院设置 | `hospital_set`（医院接口配置、签名密钥） |
 | `yygh_order` | 订单支付 | `order_info`、`payment_info`、`refund_info` |
-| `yygh_user` | 用户就诊人 | `user_info`、`patient`、`user_login_record` |
+| `yygh_user` | 用户就诊人 | `user_info`、`patient`、`user_login_record`、`user_favorite`（收藏）、`evaluation`（评价）、`checkup_package`（体检套餐） |
 
 ### MongoDB 数据库
 
@@ -191,6 +193,11 @@ cupr/
 | `yygh_hosp` | 医院业务数据 | `Hospital`（医院详情+预约规则）、`Department`（科室）、`Schedule`（排班+号源） |
 
 > 初始化脚本在 `yygh/sql/` 目录，Docker 首次启动会自动导入。
+> 
+> - `yygh表结构.sql` — 全部 MySQL 表结构定义
+> - `yygh初始化数据.sql` — 基础字典数据
+> - `yygh_test_data.sql` — 测试/演示数据（用户、就诊人、订单、支付记录）
+> - `yygh_new_features.sql` — 新功能表（收藏、评价、体检套餐）及性能索引
 
 ---
 
@@ -343,8 +350,14 @@ npm run dev
 3. **科室排班** — 查看医院的科室树和排班日程
 4. **预约挂号** — 选择排班时段，填写就诊人信息，确认预约
 5. **微信支付** — 扫码支付挂号费用
-6. **订单管理** — 查看预约订单、取消预约
+6. **订单管理** — 查看预约订单、取消预约、导出 Excel
 7. **就诊人管理** — 添加/编辑就诊人信息
+8. **🆕 医院收藏** — 收藏常用医院，快速访问
+9. **🆕 就诊评价** — 就诊后对医院进行五星评分和文字评价
+10. **🆕 智能导诊** — 输入症状关键词，智能推荐就诊科室（覆盖 30+ 常见症状）
+11. **🆕 医院对比** — 同时选择 2-3 家医院进行横向对比（等级、评分、预约规则等）
+12. **🆕 体检套餐** — 查看医院的体检套餐（项目内容、价格对比、适用人群）
+13. **🆕 医生团队** — 查看医院专家医生团队及擅长领域
 
 ### 管理端核心功能
 
@@ -371,6 +384,23 @@ npm run dev
 
 Swagger 文档在启动网关后可通过 http://localhost:8080/swagger-ui.html 在线查看。
 
+### 新增功能 API 接口
+
+| 功能 | 路径 | 方法 | 说明 |
+|------|------|------|------|
+| 医院收藏 | `/api/user/favorite/auth/list` | GET | 获取收藏列表 |
+| 医院收藏 | `/api/user/favorite/auth/check/{hoscode}` | GET | 检查是否已收藏 |
+| 医院收藏 | `/api/user/favorite/auth/add/{hoscode}/{hosname}` | POST | 收藏医院 |
+| 医院收藏 | `/api/user/favorite/auth/cancel/{hoscode}` | DELETE | 取消收藏 |
+| 就诊评价 | `/api/user/evaluation/auth/submit` | POST | 提交评价 |
+| 就诊评价 | `/api/user/evaluation/list/{hoscode}/{page}/{limit}` | GET | 获取医院评价列表 |
+| 就诊评价 | `/api/user/evaluation/rating/{hoscode}` | GET | 获取医院评分统计 |
+| 就诊评价 | `/api/user/evaluation/auth/check/{orderId}` | GET | 检查订单是否已评价 |
+| 订单导出 | `/api/order/orderInfo/auth/exportExcel` | GET | 导出预约记录为 Excel |
+| 统计看板 | `/api/sta/statistics/overview` | GET | 平台概览数据 |
+| 统计看板 | `/api/sta/statistics/deptRanking` | GET | 科室预约排行 |
+| 统计看板 | `/api/sta/statistics/hospRanking` | GET | 医院预约排行 |
+
 ---
 
 ## 常见问题
@@ -392,6 +422,21 @@ A: 需要在阿里云短信控制台申请签名和模板，获取 AccessKey 填
 
 ### Q: API 返回 403 / 认证失败？
 A: 网关已恢复 JWT 认证。需要登录或调用的接口属于 `/api/**/auth/**` 路径时，请在请求 Header 中携带 `token` 字段。
+
+### Q: 智能导诊如何工作？
+A: 在首页右侧"智能导诊"卡片中输入症状关键词（如"头痛"、"咳嗽"），系统会根据症状-科室映射推荐最匹配的就诊科室。覆盖 30+ 常见症状，也支持按科室名称反向搜索。
+
+### Q: 如何对比多家医院？
+A: 点击导航栏"医院对比"，进入对比页面。在搜索框中分别输入 2-3 家医院名称，系统将展示等级、地址、预约周期、放号时间、退号规则、用户评分等维度的横向对比表格。
+
+### Q: 评价系统需要登录吗？
+A: 提交评价需要先登录（`/auth/` 路径）。查看评价列表和评分统计无需登录，在医院详情页底部直接可见。
+
+### Q: 套餐数据从哪里来？
+A: 体检套餐目前使用前端静态 Mock 数据展示，数据库表 `checkup_package` 已建好，后续可通过管理后台录入真实数据。测试数据在 `yygh_new_features.sql` 中。
+
+### Q: 如何导入评价和套餐的测试数据？
+A: 执行 `yygh/sql/yygh_new_features.sql` 脚本即可创建 `evaluation` 和 `checkup_package` 表并导入套餐示例数据。
 
 ---
 
